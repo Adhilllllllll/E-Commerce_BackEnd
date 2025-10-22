@@ -56,11 +56,17 @@ const userSchema = mongoose.Schema(
 );
 
 
-
+// Static method for hashing password before saving
 userSchema.statics.hashPassword = async function (userPassword) {
   return await bcrypt.hash(userPassword, 8);
 };
 
+
+
+// Instance method to compare passwords
+userSchema.methods.comparePassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
 
 
 const User = mongoose.model("User", userSchema);
