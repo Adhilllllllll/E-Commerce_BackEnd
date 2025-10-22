@@ -1,9 +1,10 @@
- const jwt = require("jsonwebtoken");
- const User =require("../models/userModel")
+const jwt = require("jsonwebtoken");
+const User = require("../models/userModel");
+
+//User AuthenticateUser MiddleWare
 
 async function authenticateUser(req, res, next) {
   try {
-    // Token from cookie or header
     const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
     if (!token) throw new Error("Please login first");
 

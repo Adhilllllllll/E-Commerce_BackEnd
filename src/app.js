@@ -1,10 +1,12 @@
 const express = require("express");
 const cors = require("cors");
-const cookieParser = require("cookie-parser");
-const authRouter = require("../src/routes/authRouter");
-
+const cookieParser = require("cookie-parser"); 
 const rateLimit = require("express-rate-limit");
 const app = express();
+
+
+const authRouter = require("../src/routes/authRouter");
+const productRouter = require("../src/routes/productRouter")
 
 
 //Rate - limit
@@ -28,6 +30,7 @@ app.use(cookieParser());
 // Routes
 app.use("/api", limiter);
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/products",productRouter)
 
 
 
