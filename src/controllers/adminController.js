@@ -1,6 +1,6 @@
-const Product = require("../models/productModel");
-const Prooduct =require("../models/productModel");
 
+const Product = require("../models/productModel");
+ 
 
 // ******************************************************************//
 // -----------------------PRODUCT SECTION-----------------------//
@@ -14,7 +14,7 @@ exports.createproduct = async function(req,res){
     console.log("admin added  product reached");
     const {image,name,description,brand,category,price,rating,count}= req.body
     
-    const newProduct =await Prooduct.create({
+    const newProduct =await Product.create({
         name,
         description,
         brand,
@@ -114,6 +114,4 @@ exports.deleteProduct =async function(req,res){
         })
     }
 }
-
-
 

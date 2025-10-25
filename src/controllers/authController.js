@@ -1,3 +1,4 @@
+const { path } = require("../app");
 const User = require("../models/userModel");
 const jwt=require("jsonwebtoken")
 
@@ -53,8 +54,9 @@ exports.login = async function (req, res) {
       res.cookie("token", TOKEN, {
         httpOnly: true,
         secure: false,
-        sameSite: "lax",
-        maxAge: 24 * 60 * 60 * 1000, // 1 dayyyyy
+        sameSite: "lax",  // allows cors with credentila
+        path:"/",
+        maxAge: 24 * 60 * 60 * 1000, // 1 day
       });
 
       if (user.role === "admin") {
@@ -81,3 +83,26 @@ exports.login = async function (req, res) {
     });
   }
 };
+
+// LOGOUT
+
+exports.logout =async function (req,res){
+  try{
+    //clearing auth cookie
+    res.clearCookie("token",{
+      httpOnly:true,
+      secure:false,
+      sameSite:"lax",
+      path:"/"
+    });
+    return res.status(200).json({
+      status:"success",
+      message:"logged out successfully",
+    });
+  }catch(err){
+    res.status(500).json({
+      status:"failed",
+      message:err.message,
+    })
+  }
+}
