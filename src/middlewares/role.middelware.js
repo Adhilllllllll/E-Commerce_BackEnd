@@ -1,5 +1,3 @@
-
-
 const restrictTo = function (...allowedRoles) {
   return function (req, res, next) {
     if (!req.user) {
@@ -20,5 +18,4 @@ const restrictTo = function (...allowedRoles) {
   };
 };
 
-module.exports={restrictTo};
-
+module.exports = { restrictTo };

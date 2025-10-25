@@ -37,7 +37,7 @@ exports.signup = async (req, res) => {
 exports.login = async function (req, res) {
   try {
     const { email, password } = req.body;
-    // 1) finding the user with email
+    //  finding the user with email
     const user = await User.findOne({ email: email });
     if (!user) throw new Error(`No such user found.`);
 

@@ -8,7 +8,7 @@ const helmet =require("helmet")
 
 const authRouter = require("../src/routes/authRouter");
 const productRouter = require("../src/routes/productRouter")
-// const adminRouter = require("../src/routes/adminRouter")
+ const adminRouter = require("../src/routes/adminRouter")
 
 //Rate - limit
 
@@ -53,7 +53,7 @@ app.use("/api", limiter);
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/products",productRouter);
-// app.use("/api/v1/admin",adminRouter)
+app.use("/api/v1/admin",adminRouter);
 
 
 

@@ -11,7 +11,7 @@ const Product = require("../models/productModel");
 exports.createproduct = async function(req,res){
   try{
  
-    console.log("admin added  product reached");
+    console.log("admin  reached createproduct rout");
     const {image,name,description,brand,category,price,rating,count}= req.body
     
     const newProduct =await Product.create({
@@ -26,14 +26,14 @@ exports.createproduct = async function(req,res){
     });
      
     res.status(201).json({
-       status:"message",
+       status:"Success",
        data:newProduct
     })
 
   }catch(err){
     console.log(err.message);
     
-    res.status(404).json({
+    res.status(400).json({
         status :"failed",
         message:err.message
     })
@@ -113,5 +113,34 @@ exports.deleteProduct =async function(req,res){
             message:err.message
         })
     }
+};
+
+
+//vieproduct
+
+exports.viewProduct = async function (req,res) {
+    try{
+        const{productId} =req.params;
+        const product=await product.findById(productId);
+        if(!product){
+            return res.status(404).json({
+                status:"failed",
+                message:"product not found"
+            });
+            res.status(200).json({
+                status:"success",
+                data:product
+            });
+
+        }
+
+    }catch(err){
+        req.status(400).json({
+            status:"failed",
+            message:err.message
+        });
+    }
 }
+
+
 
