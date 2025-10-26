@@ -25,5 +25,5 @@ mongoose
   .catch((err) => console.error("❌ Failed to connect to the database", err));
 
 app.listen(PORT, "localhost", () => {
-  console.log("Server is running on PORT 3000");
+  console.log("Server is running on  PORT 7000");
 });

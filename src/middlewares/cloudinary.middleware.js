@@ -8,8 +8,7 @@ cloudinary.config({
   api_secret: "3w8BEchTft5P93JDQ3G6aEIuFbY",
 });
 
-
-// Define storage engine for Multer using Cloudinary
+// Storage engine
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {

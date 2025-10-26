@@ -1,14 +1,14 @@
 const express = require("express");
 const cors = require("cors");
-const cookieParser = require("cookie-parser"); 
+const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const app = express();
-const helmet =require("helmet")
-
+const helmet = require("helmet");
 
 const authRouter = require("../src/routes/authRouter");
-const productRouter = require("../src/routes/productRouter")
- const adminRouter = require("../src/routes/adminRouter")
+const productRouter = require("../src/routes/productRouter");
+const adminRouter = require("../src/routes/adminRouter");
+const cartRouter =require("../src/routes/cartRouter")
 
 //Rate - limit
 
@@ -25,7 +25,6 @@ const limiter = rateLimit({
 
 // Middlewares
 
-
 app.use(helmet());
 app.use(
   cors({
@@ -36,33 +35,17 @@ app.use(
   })
 );
 
-
 app.use(express.json());
 app.use(cookieParser());
 
-
-// app.use((err,req,res,next)=>{
-//   console.log(`REQUEST +`,req);
-  
-// })
-
-// Rate limiter
+// Rate limiter for all
 app.use("/api", limiter);
 
 // Routes
 
 app.use("/api/v1/auth", authRouter);
-app.use("/api/v1/products",productRouter);
-app.use("/api/v1/admin",adminRouter);
-
-
-
- // 404 error handling middleware
-//  app.use((err,req,res,next)=>{
-//   return res.status(404).json({
-//     status:"can't find the url",
-//     message:err.message
-//   })
-//  })
+app.use("/api/v1/products", productRouter);
+app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/carts",cartRouter)
 
 module.exports = app;

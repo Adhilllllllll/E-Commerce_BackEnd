@@ -31,7 +31,7 @@ exports.createproduct = async function(req,res){
     })
 
   }catch(err){
-    console.log(err.message);
+    console.error(err.message);
     
     res.status(400).json({
         status :"failed",
@@ -49,21 +49,29 @@ exports.updateproduct = async function(req,res){
     try{
 
   const {productId} =req.params;
-  const {description,count,image,price} =req.body;
+  const {description,count,image,price,name,category,brand} =req.body;
+
+ if(!productId)
+     throw new Error("there is no prodcut ID");
+
+const updateData ={};
+if(description !== undefined)updateData.description =description;
+if(name !== undefined)updateData.name =name;
+if(count !== undefined)updateData.count =count;
+if(image !== undefined)updateData.image =image;
+if(price !== undefined)updateData.price =price;
+if(category !== undefined)updateData.category =category;
+if(brand !== undefined)updateData.brand =brand;
 
 
-  const updatedProduct = await  Product.findByIdAndUpdate(
-    productId,
-    {
-        description,
-        image,
-        count,
-        price
-    },
-    {new :true, runValidators:true}
-  );
+const product =await Product.findByIdAndUpdate(productId,updateData,{
+    new:true,
+    runValidators:true
+     
+})
 
-   if(!updatedProduct){
+
+   if(!product){
     return res.status(404).json({
         status:"success",
         message:"No such product exist"
@@ -72,11 +80,11 @@ exports.updateproduct = async function(req,res){
 
    res.status(200).json({
     status:"success",
-    data:updatedProduct
+    data:product
    })
 
     }catch(err){
-        res.status(200).json({
+        res.status(400).json({
             status:"failed",
             message:err.message
         })
@@ -121,21 +129,22 @@ exports.deleteProduct =async function(req,res){
 exports.viewProduct = async function (req,res) {
     try{
         const{productId} =req.params;
-        const product=await product.findById(productId);
+        const product=await Product.findById(productId);
         if(!product){
             return res.status(404).json({
                 status:"failed",
                 message:"product not found"
             });
+             }
             res.status(200).json({
                 status:"success",
                 data:product
             });
 
-        }
+       
 
     }catch(err){
-        req.status(400).json({
+        res.status(400).json({
             status:"failed",
             message:err.message
         });

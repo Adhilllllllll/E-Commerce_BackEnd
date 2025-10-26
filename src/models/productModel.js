@@ -15,6 +15,7 @@ const productSchema = mongoose.Schema(
     price: {
       type: Number,
       required: [true, "A product should have a price"],
+      min:[0,"price cannot be neagtive"]
     },
 
     image: {
@@ -37,6 +38,7 @@ const productSchema = mongoose.Schema(
     count: {
       type: Number,
       default: 10,
+      min:[0,"stock cannot be negative"]
     },
 
     isActive: {
