@@ -26,12 +26,31 @@ const orderSchema = mongoose.Schema(
         },
 
 
+        address:{
+            type:String,
+            required:[true,"shipping address is required"]
+
+        },
+
+
+
         status:{
             type:String,
             enum:{
-                values:["pending","shipped","delivered","cancel"]
+                values:["pending","shipped","delivered","cancel"],
+            default:"pending"
             }
+        },
+
+
+        paymentStatus:{ 
+            type:String,
+            enum:["unpaid","paid"],
+            default:"unpaid"
+
         }
+ 
+
     },
     {timestamps:true}
 );

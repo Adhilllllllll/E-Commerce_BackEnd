@@ -9,7 +9,8 @@ const authRouter = require("../src/routes/authRouter");
 const productRouter = require("../src/routes/productRouter");
 const adminRouter = require("../src/routes/adminRouter");
 const cartRouter =require("../src/routes/cartRouter");
-const wishListRouter =require("../src/routes/wishListRouter")
+const wishListRouter =require("../src/routes/wishListRouter");
+const orderRouter =require("../src/routes/orderRouter")
 
 //Rate - limit
 
@@ -48,6 +49,7 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/carts",cartRouter);
-app.use("/api/v1/wishlist",wishListRouter)
+app.use("/api/v1/wishlist",wishListRouter);
+app.use("/api/v1/orders",orderRouter);
 
 module.exports = app;

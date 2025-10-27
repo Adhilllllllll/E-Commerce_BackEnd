@@ -131,7 +131,7 @@ exports.getWishListCount = async function (req, res) {
 
     const count = await Wishlist.countDocuments({ userId: loggedInUser.id });
 
-    res.status(200).JSON({
+    res.status(200).json({
       status: "success",
       count,
     });
