@@ -1,4 +1,4 @@
- const crypto = require("node:crypto");
+ const crypto = require("crypto");
 const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcrypt");
@@ -38,8 +38,7 @@ const userSchema = mongoose.Schema(
     },
 
     passwordResetToken: String,
-    passwordResetExpires: Date,
-
+    passwordResetExpires: Date, 
     passwordChangedAt: Date,
 
     profileImage: {
@@ -69,5 +68,129 @@ userSchema.methods.comparePassword = async function (enteredPassword) {
 };
 
 
+
+//Generate password reeset token 
+
+userSchema.methods.createResetPasswordToken = function(){
+  const resetToken =crypto.randomBytes(32).toString("hex");
+
+
+  this.passwordResetToken =crypto
+     .createHash("sha256")
+     .update(resetToken)
+     .digest("hex");
+
+
+  this.passwordResetExpires =Date.now()+10 *60*1000; //10 minutes
+  return resetToken;
+
+};
+
+//update  passwordChangedAt before saving
+userSchema.pre("save",function(next){
+  if(!this.isModified("password") || this.isNew) return next();
+  this.passwordChangedAt =Date.now() - 1000;
+  next();
+})
+
+
 const User = mongoose.model("User", userSchema);
 module.exports = User;
+
+
+
+
+
+// const crypto = require("crypto");
+// const User = require("../models/userModel");
+// const jwt = require("jsonwebtoken");
+// const sendEmail = require("../utility/sendEmail");
+
+// // Forget Password
+// exports.forgetPassword = async function (req, res) {
+//   try {
+//     const { email } = req.body;
+//     if (!email) throw new Error("Please provide an email");
+
+//     const user = await User.findOne({ email });
+//     if (!user) {
+//       return res.status(404).json({
+//         status: "failed",
+//         message: "No such user found",
+//       });
+//     }
+
+//     const resetPasswordToken = user.createResetPasswordToken();
+//     await user.save({ validateBeforeSave: false });
+
+//     const resetUrl = `${req.protocol}://${req.get("host")}/api/v1/users/resetPassword/${resetPasswordToken}`;
+
+//     const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetUrl}\n\nIf you didn't request a password reset, please ignore this email.`;
+
+//     await sendEmail({
+//       email: user.email,
+//       subject: "Your password reset token (valid for 10 mins)",
+//       message,
+//     });
+
+//     res.status(200).json({
+//       status: "success",
+//       message: "Token sent successfully to your email",
+//     });
+//   } catch (err) {
+//     if (user) {
+//       user.passwordResetToken = undefined;
+//       user.passwordResetExpires = undefined;
+//       await user.save({ validateBeforeSave: false });
+//     }
+
+//     res.status(500).json({
+//       status: "failed",
+//       message: err.message,
+//     });
+//   }
+// };
+
+// // Reset Password
+// exports.resetPassword = async function (req, res) {
+//   try {
+//     const hashedToken = crypto
+//       .createHash("sha256")
+//       .update(req.params.token)
+//       .digest("hex");
+
+//     const user = await User.findOne({
+//       passwordResetToken: hashedToken,
+//       passwordResetExpires: { $gt: Date.now() },
+//     });
+
+//     if (!user) {
+//       return res.status(400).json({
+//         status: "failed",
+//         message: "Token is invalid or has expired",
+//       });
+//     }
+
+//     user.password = req.body.password;
+//     user.passwordConfirm = req.body.passwordConfirm;
+//     user.passwordResetToken = undefined;
+//     user.passwordResetExpires = undefined;
+
+//     await user.save({ validateBeforeSave: false });
+
+//     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, {
+//       expiresIn: "90d",
+//     });
+
+//     res.status(200).json({
+//       status: "success",
+//       token,
+//       message: "Password updated successfully",
+//     });
+//   } catch (err) {
+//     res.status(400).json({
+//       status: "failed",
+//       message: err.message,
+//     });
+//   }
+// };
