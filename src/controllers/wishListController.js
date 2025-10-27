@@ -1,10 +1,10 @@
- const Wishlist = require("../models/wishListModel");
-
+const Cart = require("../models/cartModel");
+const Wishlist = require("../models/wishListModel");
 
 //Get All wishList Items
 
-exports.getAllWishlistitems = async function(req,res){
-   try {
+exports.getAllWishlistitems = async function (req, res) {
+  try {
     const loggedInUser = req.user;
 
     if (!loggedInUser) {
@@ -29,8 +29,6 @@ exports.getAllWishlistitems = async function(req,res){
     });
   }
 };
-
-
 
 // Add to wishlist
 exports.addToWishlist = async function (req, res) {
@@ -101,7 +99,9 @@ exports.removeFromWishlist = async function (req, res) {
       productId,
     });
 
-    const data = await Wishlist.find({ userId: loggedInUser._id }).populate("productId");
+    const data = await Wishlist.find({ userId: loggedInUser._id }).populate(
+      "productId"
+    );
 
     res.status(200).json({
       status: "success",
@@ -116,5 +116,77 @@ exports.removeFromWishlist = async function (req, res) {
   }
 };
 
+// Get WishList Count
 
+exports.getWishListCount = async function (req, res) {
+  try {
+    const loggedInUser = req.user;
 
+    if (!loggedInUser) {
+      return res.status(401).json({
+        status: "failed",
+        message: "please login first",
+      });
+    }
+
+    const count = await Wishlist.countDocuments({ userId: loggedInUser.id });
+
+    res.status(200).JSON({
+      status: "success",
+      count,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: err.message,
+    });
+  }
+};
+
+// Move Item From WishList To Cart
+
+exports.moveToCart = async function (req, res) {
+  try {
+    const { productId } = req.user;
+    const loggedInUser = req.params;
+
+    if (!loggedInUser) {
+      return res.status(400).json({
+        status: "failed",
+        message: "please logIn first",
+      });
+    }
+
+    const isAlreadyInCart = await Cart.findOne({
+      productId,
+      userId: loggedInUser.id,
+    });
+
+    // if not in there crete one
+
+    if (!isAlreadyInCart) {
+      await Cart.create({
+        userId: loggedInUser.id,
+        productId,
+        quantity: 1,
+      });
+    }
+
+    // remove product from wishlist after moving
+
+    await Wishlist.findOneAndDelete({
+      userId: loggedInUser.id,
+      productId,
+    });
+
+    res.status(200).json({
+      status: "success",
+      message: "product moved to cart successfully",
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: err.message,
+    });
+  }
+};

@@ -14,4 +14,12 @@ router
   .route("/deleteWishList/:productId")
   .delete(authenticateUser, wishlistController.removeFromWishlist);
 
+
+router
+   .route("/count").get(authenticateUser,wishlistController.getWishListCount);
+
+router
+   .route("/moveToCart/:productId")
+   .post(authenticateUser,wishlistController.moveToCart)
+
 module.exports = router;
