@@ -10,14 +10,15 @@ exports.signup = async (req, res) => {
   try {
     const { name, email, password, role, profileImage } = req.body;
     const hashedPassword = await User.hashPassword(password);
-
+   console.log("Password before hash:", password);
+console.log("Hashed password:", hashedPassword);
     const newUser = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      role,
-      profileImage,
-    });
+  name,
+  email,
+  password,   
+  role,
+  profileImage,
+});
 
     res.status(201).json({
       status: "success",
@@ -43,11 +44,14 @@ exports.login = async function (req, res) {
     const user = await User.findOne({ email: email });
     if (!user) throw new Error(`No such user found.`);
 
+    console.log("Entered password:", password);
+console.log("Stored password in DB:", user.password);
+
     //comparing the password
     const isPasswordValid = await user.comparePassword(password);
 
     //GENERATING A TOKEN
-    const TOKEN = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, {
+    const TOKEN = jwt.sign({ Id: user._id }, process.env.JWT_SECRET_KEY, {
       expiresIn: process.env.JWT_EXPIRES_IN,
     });
 
@@ -176,6 +180,9 @@ exports.resetPassword = async function (req, res) {
       .update(req.params.token)
       .digest("hex");
 
+      console.log("Token from URL (plain):", req.params.token);
+console.log("Hashed token (used to query DB):", hashedToken);
+
     const user = await User.findOne({
       passwordResetToken: hashedToken,
       passwordResetExpires: { $gt: Date.now() },
@@ -188,8 +195,9 @@ exports.resetPassword = async function (req, res) {
       });
     }
 
-    user.password = req.body.password;
-    user.passwordConfirm = req.body.passwordConfirm;
+  user.password = req.body.password;
+user.passwordConfirm = req.body.passwordConfirm;
+
 
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
@@ -197,7 +205,7 @@ exports.resetPassword = async function (req, res) {
 
     //After editing the password the jwt token is issued  again to the user
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, {
-      expiresIn: "90d",
+      expiresIn: process.env.JWT_EXPIRES_IN,
     });
 
     res.status(200).json({
@@ -210,6 +218,31 @@ exports.resetPassword = async function (req, res) {
       status: "failed",
       message: err.message,
     });
+  }
+};
+
+
+// Get current logged-in user
+exports.getCurrentUser = async (req, res) => {
+  try {
+    // The authenticate middleware attaches the user to req.user
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ status: "failed", message: "Not logged in" });
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profileImage: user.profileImage || null,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ status: "failed", message: err.message });
   }
 };
 

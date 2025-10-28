@@ -1,7 +1,7 @@
 const Order =require("../models/orderModel");
 
 
-exports.viewProdfile =async function(req,res){
+exports.viewProfile =async function(req,res){
     try{
     const loggedInUser = req.user;
     if(!loggedInUser){

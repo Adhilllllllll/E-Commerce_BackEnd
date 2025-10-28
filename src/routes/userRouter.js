@@ -6,7 +6,7 @@ const profileController =require("../controllers/profileController");
 
 router
     .route("/profile")
-    .get(authenticateUser,profileController.viewProdfile);
+    .get(authenticateUser,profileController.viewProfile);
 
 
 router 
@@ -16,6 +16,10 @@ router
 router
    .route("/resetPassword/:token")
    .patch(authController.resetPassword);
+
+router 
+   .route("/me")
+   .get(authenticateUser,authController.getCurrentUser)
 
 
 module.exports =router;
