@@ -2,6 +2,7 @@ const { path } = require("path");
 const User = require("../models/userModel");
 const jwt=require("jsonwebtoken");
 const sendEmail =require("../utils/email")
+const crypto = require("crypto");
 
 //Sign Up
 
@@ -131,7 +132,8 @@ exports.forgetPassword =async function (req,res){
     }
 
    const resetPasswordToken =user.createResetPasswordToken();
-   await user.save();
+   await user.save({ validateBeforeSave: false });
+
    const resetUrl =`${req.protocol}://${req.get(
      "host"
   )}/api/v1/users/resetPassword/${resetPasswordToken}`;
@@ -145,6 +147,9 @@ exports.forgetPassword =async function (req,res){
   subject:"your passwrod reset token (valid for 10 mins)",
   message,
  });
+
+ console.log(`RESET PASSWORD LINK: http://localhost:7000/api/v1/users/resetPassword/${resetPasswordToken}`);
+ 
 
  res.status(200).json({
   status:"success",
