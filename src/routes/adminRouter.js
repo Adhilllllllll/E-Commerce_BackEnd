@@ -42,4 +42,10 @@ router.delete(
   adminController.deleteProduct
 );
 
+router.get("/allProducts",
+  authenticateUser,
+  restrictTo("admin"),
+  adminController.getAllProducts
+)
+
 module.exports = router;

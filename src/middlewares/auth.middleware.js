@@ -9,7 +9,7 @@ async function authenticateUser(req, res, next) {
     if (!token) throw new Error("Please login first");
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    const user = await User.findById(decoded.Id);
+    const user = await User.findById(decoded.id);
 
     if (!user) throw new Error("User not found. Please login again");
 
