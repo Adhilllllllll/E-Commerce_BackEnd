@@ -48,4 +48,21 @@ router.get("/allProducts",
   adminController.getAllProducts
 )
 
+
+///////// ORDER ROUTES
+
+router
+  .route("/viewOrder/:orderId")
+  .get(authenticateUser, restrictTo("admin"),
+   adminController.viewOrder);
+
+router
+  .route("/changeOrderStatus/:orderId")
+  .put(
+    authenticateUser,
+    restrictTo("admin"),
+    adminController.changeOrderStatus
+  );
+
+
 module.exports = router;

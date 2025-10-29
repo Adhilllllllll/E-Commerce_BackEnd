@@ -1,6 +1,6 @@
 
 const Product = require("../models/productModel");
- 
+ const Order =require("../models/orderModel");
 
 // ******************************************************************//
 // -----------------------PRODUCT SECTION-----------------------//
@@ -151,7 +151,7 @@ exports.viewProduct = async function (req,res) {
     }
 };
 
-
+ 
 //getAll Products
 
 exports.getAllProducts = async function (req, res) {
@@ -172,4 +172,119 @@ exports.getAllProducts = async function (req, res) {
 
 
 
+// ORDER SECTION
+  
+exports.getAllProducts = async function(req,res){
+     try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
+    const allOrders = await Order.find({})
+      .skip(skip)
+      .limit(limit)
+      .populate("products.productId", "name price image")
+      .populate("userId", "name email");
+
+    const totalOrders = await Order.countDocuments();
+
+    const revenue = await Order.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: "$totalPrice" },
+        },
+      },
+    ]);
+
+    const totalRevenue = revenue[0]?.totalRevenue || 0;
+
+    res.status(200).json({
+      status: "success",
+      totalOrders,
+      totalRevenue,
+      currentPage: page,
+      totalPages: Math.ceil(totalOrders / limit),
+      data: allOrders,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: err.message,
+      stack: err.stack,
+    });
+  }
+};
+
+
+
+// view AllOrders
+
+
+exports.viewOrder = async function (req, res) {
+  try {
+    const { orderId } = req.params;
+    if (!orderId) throw new Error("Order ID required");
+
+    const order = await Order.findById(orderId)
+      .populate("products.productId", "name price image")
+      .populate("userId", "name email");
+
+    if (!order) {
+      return res.status(404).json({
+        status: "failed",
+        message: "Order not found",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: order,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: err.message,
+    });
+  }
+};
+
+
+
+exports.changeOrderStatus = async function (req, res) {
+  try {
+    const { orderId } = req.params;
+    const { status } = req.body;
+
+    if (!orderId || !status) {
+      return res.status(400).json({
+        status: "failed",
+        message: "Order ID and status are required",
+      });
+    }
+
+    const order = await Order.findByIdAndUpdate(
+      orderId,
+      { status },
+      { new: true, runValidators: true }
+    );
+
+    if (!order) {
+      return res.status(404).json({
+        status: "failed",
+        message: "Order not found",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: `Order status updated to ${status}`,
+      data: order,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: err.message,
+    });
+  }
+};

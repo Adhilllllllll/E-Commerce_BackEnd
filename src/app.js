@@ -28,7 +28,7 @@ const limiter = rateLimit({
 
 // Middlewares
 
-app.use(helmet());
+app.use(helmet({contentSecurityPolicy:false}));
 app.use(
   cors({
     origin: "http://localhost:5173",
