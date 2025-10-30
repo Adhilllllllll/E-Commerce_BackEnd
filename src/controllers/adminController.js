@@ -1,166 +1,37 @@
-
 const Product = require("../models/productModel");
- const Order =require("../models/orderModel");
+const Order = require("../models/orderModel");
+const User = require("../models/userModel");
 
 // ******************************************************************//
 // -----------------------PRODUCT SECTION-----------------------//
 // ******************************************************************//
 
-
-
-exports.createproduct = async function(req,res){
-  try{
- 
-    console.log("admin  reached createproduct rout");
-    const {image,name,description,brand,category,price,rating,count}= req.body
-    
-    const newProduct =await Product.create({
-        name,
-        description,
-        brand,
-        category,
-        price,
-        rating,
-        count,
-        image
-    });
-     
-    res.status(201).json({
-       status:"Success",
-       data:newProduct
-    })
-
-  }catch(err){
-    console.error(err.message);
-    
-    res.status(400).json({
-        status :"failed",
-        message:err.message
-    })
-  }
-};
-
-
-/***********************************************************/
-
-//    UPDATE PRODUCT
-
-exports.updateproduct = async function(req,res){
-    try{
-
-  const {productId} =req.params;
-  const {description,count,image,price,name,category,brand} =req.body;
-
- if(!productId)
-     throw new Error("there is no prodcut ID");
-
-const updateData ={};
-if(description !== undefined)updateData.description =description;
-if(name !== undefined)updateData.name =name;
-if(count !== undefined)updateData.count =count;
-if(image !== undefined)updateData.image =image;
-if(price !== undefined)updateData.price =price;
-if(category !== undefined)updateData.category =category;
-if(brand !== undefined)updateData.brand =brand;
-
-
-const product =await Product.findByIdAndUpdate(productId,updateData,{
-    new:true,
-    runValidators:true
-     
-})
-
-
-   if(!product){
-    return res.status(404).json({
-        status:"success",
-        message:"No such product exist"
-    })
-   }
-
-   res.status(200).json({
-    status:"success",
-    data:product
-   })
-
-    }catch(err){
-        res.status(400).json({
-            status:"failed",
-            message:err.message
-        })
-    }
-};
-
-
-/***************************************************************/
-
-
-//     DELETE PRODUCT
-
-exports.deleteProduct =async function(req,res){
-    try{
-
-        const {productId} =req.params;
-        const deletedProduct =await Product.findByIdAndDelete(productId);
-
-        if(!deletedProduct){
-            return res.status(404).json({
-                status:"fail",
-                message:"no such product exist!"
-            })
-        }
-
-        res.status(204).json({
-            status:"success",
-            data:null
-        })
-
-    }catch(err){
-        res.status(400).json({
-            status:"failed",
-            message:err.message
-        })
-    }
-};
-
-
-//vieproduct
-
-exports.viewProduct = async function (req,res) {
-    try{
-        const{productId} =req.params;
-        const product=await Product.findById(productId);
-        if(!product){
-            return res.status(404).json({
-                status:"failed",
-                message:"product not found"
-            });
-             }
-            res.status(200).json({
-                status:"success",
-                data:product
-            });
-
-       
-
-    }catch(err){
-        res.status(400).json({
-            status:"failed",
-            message:err.message
-        });
-    }
-};
-
- 
-//getAll Products
-
+//  Get All Products (with pagination, filtering, sorting)
 exports.getAllProducts = async function (req, res) {
   try {
-    const products = await Product.find();
+    const { category, page = 1, limit = 10, sort } = req.query;
+
+    const filter = category ? { category } : {};
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const sortFilter = {};
+    if (sort === "higher") sortFilter.price = 1;
+    if (sort === "lower") sortFilter.price = -1;
+
+    const totalProducts = await Product.countDocuments(filter);
+
+    const allProducts = await Product.find(filter)
+      .sort(sortFilter)
+      .skip(skip)
+      .limit(limitNumber);
+
     res.status(200).json({
       status: "success",
-      results: products.length,
-      data: products,
+      totalProducts,
+      results: allProducts.length,
+      data: allProducts,
     });
   } catch (err) {
     res.status(400).json({
@@ -170,12 +41,147 @@ exports.getAllProducts = async function (req, res) {
   }
 };
 
+//  Add Product (Create)
+exports.addProduct = async function (req, res) {
+  try {
+    const { name, description, price, category, brand, rating, count, image } =
+      req.body;
 
+    if (!name || !price || !category) {
+      throw new Error(
+        "Please provide name, price, and category for the product."
+      );
+    }
+
+    const newProduct = await Product.create({
+      name,
+      description,
+      price,
+      image,
+      category,
+      brand,
+      rating,
+      count,
+    });
+
+    res.status(201).json({
+      status: "success",
+      data: newProduct,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: err.message,
+    });
+  }
+};
+
+// Edit Product (Update)
+exports.editProduct = async function (req, res) {
+  try {
+    const { productId } = req.params;
+    const { description, price, name, image, category, brand, count, rating } =
+      req.body;
+
+    if (!productId) throw new Error("No product ID provided.");
+
+    const updateData = {};
+    if (description !== undefined) updateData.description = description;
+    if (price !== undefined) updateData.price = price;
+    if (name !== undefined) updateData.name = name;
+    if (image !== undefined) updateData.image = image;
+    if (category !== undefined) updateData.category = category;
+    if (brand !== undefined) updateData.brand = brand;
+    if (count !== undefined) updateData.count = count;
+    if (rating !== undefined) updateData.rating = rating;
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      productId,
+      updateData,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({
+        status: "failed",
+        message: "No such product exists.",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: updatedProduct,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: err.message,
+    });
+  }
+};
+
+// Delete Product
+exports.deleteProduct = async function (req, res) {
+  try {
+    const { productId } = req.params;
+    if (!productId) throw new Error("Please provide a valid product ID.");
+
+    const deletedProduct = await Product.findByIdAndDelete(productId);
+    if (!deletedProduct) {
+      return res.status(404).json({
+        status: "failed",
+        message: "No such product exists.",
+      });
+    }
+
+    res.status(204).json({
+      status: "success",
+      data: null,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: err.message,
+    });
+  }
+};
+
+//  View Single Product
+exports.viewProduct = async function (req, res) {
+  try {
+    const { productId } = req.params;
+    if (!productId) throw new Error("Please provide a valid product ID.");
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        status: "failed",
+        message: "Product not found.",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: product,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: err.message,
+    });
+  }
+};
+
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
 
 // ORDER SECTION
-  
-exports.getAllProducts = async function(req,res){
-     try {
+
+exports.getAllOrder = async function (req, res) {
+  try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -216,10 +222,7 @@ exports.getAllProducts = async function(req,res){
   }
 };
 
-
-
 // view AllOrders
-
 
 exports.viewOrder = async function (req, res) {
   try {
@@ -248,8 +251,6 @@ exports.viewOrder = async function (req, res) {
     });
   }
 };
-
-
 
 exports.changeOrderStatus = async function (req, res) {
   try {
@@ -280,6 +281,77 @@ exports.changeOrderStatus = async function (req, res) {
       status: "success",
       message: `Order status updated to ${status}`,
       data: order,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: err.message,
+    });
+  }
+};
+
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+
+//fetch alll users
+
+exports.getAllUsers = async function (req, res) {
+  try {
+    const { isBlocked, page, limit } = req.query;
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+    let filter = { role: "user" };
+    if (isBlocked) {
+      filter.isBlocked = isBlocked === "true";
+    }
+
+    const allUsers = await User.find(filter).skip(skip).limit(limitNumber);
+    res.status(200).json({
+      status: "success",
+      data: allUsers,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: err.message,
+    });
+  }
+};
+
+//block user
+exports.blockUser = async function (req, res) {
+  try {
+    const loggedInUser = req.user;
+    if (!loggedInUser) {
+      return res.status(401).json({
+        status: "failed",
+        message: "You are not logged in. Please login first.",
+      });
+    }
+
+    if (loggedInUser.role !== "admin") {
+      return res.status(403).json({
+        status: "failed",
+        message: "You are not authorized to perform this action.",
+      });
+    }
+
+    const { id } = req.params;
+    if (!id) throw new Error("No user ID provided.");
+
+    const user = await User.findById(id);
+    if (!user) throw new Error("No user found with that ID.");
+
+    user.isBlocked = !user.isBlocked;
+    await user.save();
+
+    const safeUser = await User.findById(id).select("-password");
+
+    res.status(200).json({
+      status: "success",
+      message: `User ${user.isBlocked ? "blocked" : "unblocked"} successfully`,
+      data: safeUser,
     });
   } catch (err) {
     res.status(400).json({

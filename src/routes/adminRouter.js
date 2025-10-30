@@ -14,7 +14,7 @@ router.post(
   authenticateUser,
   restrictTo("admin"),
   upload.single("image"),
-  adminController.createproduct
+  adminController.addProduct
 );
 
 // View a single product by ID (admin)
@@ -31,7 +31,7 @@ router.put(
   authenticateUser,
   restrictTo("admin"),
   upload.single("image"), // optional if admin wants to update image
-  adminController.updateproduct
+  adminController.editProduct
 );
 
 // Delete a product by ID
