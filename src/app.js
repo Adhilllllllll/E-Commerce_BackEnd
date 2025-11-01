@@ -16,7 +16,7 @@ const userRouter =require("../src/routes/userRouter")
 //Rate - limit
 
 const limiter = rateLimit({
-  max: 100,
+  max: 1000,
   windowMs: 60 * 60 * 1000,
   message: {
     status: 429,
@@ -34,7 +34,7 @@ app.use(
     origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
+     credentials: true,
   })
 );
 

@@ -17,7 +17,7 @@ const cartSchema = mongoose.Schema(
             default:1,
         }
     },
-    {timestamp:true}
+    {timestamps:true}
 );
 
 //Calculating total price

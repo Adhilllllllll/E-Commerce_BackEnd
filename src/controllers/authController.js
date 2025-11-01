@@ -51,19 +51,20 @@ console.log("Stored password in DB:", user.password);
     const isPasswordValid = await user.comparePassword(password);
 
     //GENERATING A TOKEN
-    const TOKEN = jwt.sign({ Id: user._id }, process.env.JWT_SECRET_KEY, {
+    const TOKEN = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, {
       expiresIn: process.env.JWT_EXPIRES_IN,
     });
 
     if (isPasswordValid) {
       //-- SENDING THE TOKEN AND WRAPING IN COOKIE
       res.cookie("token", TOKEN, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",  // allows cors with credentila
-        path:"/",
-        maxAge: 24 * 60 * 60 * 1000, // 1 day
-      });
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production", // false for localhost
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  path: "/",
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+});
+
 
       if (user.role === "admin") {
         return res.status(200).json({
@@ -100,8 +101,9 @@ exports.logout =async function (req,res){
     //clearing auth cookie
     res.clearCookie("token",{
       httpOnly:true,
-      secure:false,
-      sameSite:"lax",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        expires: new Date(0),
       path:"/"
     });
     return res.status(200).json({
