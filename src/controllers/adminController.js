@@ -360,3 +360,47 @@ exports.blockUser = async function (req, res) {
     });
   }
 };
+
+
+//  Delete a user by admin
+exports.deleteUser = async function (req, res) {
+  try {
+    const loggedInUser = req.user;
+
+    if (!loggedInUser) {
+      return res.status(401).json({
+        status: "failed",
+        message: "You are not logged in. Please login first.",
+      });
+    }
+
+    if (loggedInUser.role !== "admin") {
+      return res.status(403).json({
+        status: "failed",
+        message: "You are not authorized to perform this action.",
+      });
+    }
+
+    const { id } = req.params;
+    if (!id) throw new Error("No user ID provided.");
+
+    const deletedUser = await User.findByIdAndDelete(id);
+
+    if (!deletedUser) {
+      return res.status(404).json({
+        status: "failed",
+        message: "No user found with that ID.",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "User deleted successfully",
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: err.message,
+    });
+  }
+};
