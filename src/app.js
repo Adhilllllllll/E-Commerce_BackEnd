@@ -12,6 +12,8 @@ const cartRouter =require("../src/routes/cartRouter");
 const wishListRouter =require("../src/routes/wishListRouter");
 const orderRouter =require("../src/routes/orderRouter");
 const userRouter =require("../src/routes/userRouter")
+const uploadRouter =require ("../src/routes/uploadRouter");
+
 
 //Rate - limit
 
@@ -53,5 +55,6 @@ app.use("/api/v1/carts",cartRouter);
 app.use("/api/v1/wishlist",wishListRouter);
 app.use("/api/v1/orders",orderRouter);
 app.use("/api/v1/users",userRouter);
+app.use("/api/v1/upload",uploadRouter)
 
 module.exports = app;

@@ -47,17 +47,17 @@ exports.addProduct = async function (req, res) {
     const { name, description, price, category, brand, rating, count, image } =
       req.body;
 
-    if (!name || !price || !category) {
-      throw new Error(
-        "Please provide name, price, and category for the product."
-      );
+     // If images were uploaded via multer + Cloudinary
+    let images = [];
+    if (req.files && req.files.length > 0) {
+      images = req.files.map(file => file.path);  
     }
 
     const newProduct = await Product.create({
       name,
       description,
       price,
-      image,
+      image:images,
       category,
       brand,
       rating,
@@ -89,11 +89,16 @@ exports.editProduct = async function (req, res) {
     if (description !== undefined) updateData.description = description;
     if (price !== undefined) updateData.price = price;
     if (name !== undefined) updateData.name = name;
-    if (image !== undefined) updateData.image = image;
-    if (category !== undefined) updateData.category = category;
+     if (category !== undefined) updateData.category = category;
     if (brand !== undefined) updateData.brand = brand;
     if (count !== undefined) updateData.count = count;
     if (rating !== undefined) updateData.rating = rating;
+
+    if(req.files && req.files.length >0){
+      updateData.image =req.files.map(file => file.path);
+    }else if(image){
+      updateData.image = Array.isArray(image) ? image :[image];
+    }
 
     const updatedProduct = await Product.findByIdAndUpdate(
       productId,

@@ -37,14 +37,14 @@ const User = require("../models/userModel");
 // 🔹 Authenticate User Middleware
 async function authenticateUser(req, res, next) {
   try {
-    // 1️⃣ Get token from cookie or Authorization header
+    //   Get token from cookie or Authorization header
     let token = req.cookies?.token || req.headers.authorization?.split(" ")[1];
 
     if (!token) {
       return res.status(401).json({ status: "failed", message: "Please login first" });
     }
 
-    // 2️⃣ Verify token
+    //   Verify token
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
@@ -52,16 +52,16 @@ async function authenticateUser(req, res, next) {
       return res.status(401).json({ status: "failed", message: "Invalid or expired token" });
     }
 
-    // 3️⃣ Find user in DB
+    //   Find user in DB
     const user = await User.findById(decoded.id);
     if (!user) {
       return res.status(401).json({ status: "failed", message: "User not found. Please login again" });
     }
 
-    // 4️⃣ Normalize role
+    // Normalize role
     if (user.role === "user") user.role = "customer";
 
-    // 5️⃣ Attach user to request
+    // Attach user to request
     req.user = user;
 
     next();
