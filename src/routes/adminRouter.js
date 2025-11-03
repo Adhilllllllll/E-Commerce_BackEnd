@@ -88,7 +88,7 @@ const { upload } = require("../middlewares/cloudinary.middleware");
 router.use(authenticateUser, restrictTo("admin"));
 
 // -------------------- PRODUCT ROUTES -------------------- //
-router.post("/addProduct", upload.array("image",5), adminController.addProduct);
+router.post("/addProduct", upload.single("image"), adminController.addProduct);
 router.get("/viewProduct/:productId", adminController.viewProduct);
 router.put("/editProduct/:productId", upload.array("image",5), adminController.editProduct);
 router.delete("/deleteProduct/:productId", adminController.deleteProduct);

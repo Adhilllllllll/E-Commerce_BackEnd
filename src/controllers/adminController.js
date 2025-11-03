@@ -1,3 +1,7 @@
+ 
+
+
+
 const Product = require("../models/productModel");
 const Order = require("../models/orderModel");
 const User = require("../models/userModel");
@@ -6,7 +10,7 @@ const User = require("../models/userModel");
 // -----------------------PRODUCT SECTION-----------------------//
 // ******************************************************************//
 
-//  Get All Products (with pagination, filtering, sorting)
+// Get All Products (with pagination, filtering, sorting)
 exports.getAllProducts = async function (req, res) {
   try {
     const { category, page = 1, limit = 10, sort } = req.query;
@@ -41,27 +45,26 @@ exports.getAllProducts = async function (req, res) {
   }
 };
 
-//  Add Product (Create)
+// Add Product (Create)
 exports.addProduct = async function (req, res) {
   try {
-    const { name, description, price, category, brand, rating, count, image } =
-      req.body;
+    const { name, description, price, category, brand, rating, count } = req.body;
 
-     // If images were uploaded via multer + Cloudinary
-    let images = [];
-    if (req.files && req.files.length > 0) {
-      images = req.files.map(file => file.path);  
+    // Single image upload handling
+    let image = "";
+    if (req.file) {
+      image = req.file.path;
     }
 
     const newProduct = await Product.create({
       name,
       description,
       price,
-      image:images,
       category,
       brand,
       rating,
       count,
+      image, // single string
     });
 
     res.status(201).json({
@@ -80,34 +83,31 @@ exports.addProduct = async function (req, res) {
 exports.editProduct = async function (req, res) {
   try {
     const { productId } = req.params;
-    const { description, price, name, image, category, brand, count, rating } =
-      req.body;
+    const { name, description, price, category, brand, count, rating, image } = req.body;
 
     if (!productId) throw new Error("No product ID provided.");
 
     const updateData = {};
+    if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     if (price !== undefined) updateData.price = price;
-    if (name !== undefined) updateData.name = name;
-     if (category !== undefined) updateData.category = category;
+    if (category !== undefined) updateData.category = category;
     if (brand !== undefined) updateData.brand = brand;
     if (count !== undefined) updateData.count = count;
     if (rating !== undefined) updateData.rating = rating;
 
-    if(req.files && req.files.length >0){
-      updateData.image =req.files.map(file => file.path);
-    }else if(image){
-      updateData.image = Array.isArray(image) ? image :[image];
+    // Image update
+    if (req.file) {
+      updateData.image = req.file.path; // new uploaded file
+    } else if (image) {
+      // If frontend sent image URL, use it
+      updateData.image = Array.isArray(image) ? image[0] : image;
     }
 
-    const updatedProduct = await Product.findByIdAndUpdate(
-      productId,
-      updateData,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+    const updatedProduct = await Product.findByIdAndUpdate(productId, updateData, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!updatedProduct) {
       return res.status(404).json({
@@ -154,7 +154,7 @@ exports.deleteProduct = async function (req, res) {
   }
 };
 
-//  View Single Product
+// View Single Product
 exports.viewProduct = async function (req, res) {
   try {
     const { productId } = req.params;
@@ -180,10 +180,7 @@ exports.viewProduct = async function (req, res) {
   }
 };
 
-////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////
-
-// ORDER SECTION
+// ----------------------- ORDER SECTION ----------------------- //
 
 exports.getAllOrder = async function (req, res) {
   try {
@@ -200,12 +197,7 @@ exports.getAllOrder = async function (req, res) {
     const totalOrders = await Order.countDocuments();
 
     const revenue = await Order.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalRevenue: { $sum: "$totalPrice" },
-        },
-      },
+      { $group: { _id: null, totalRevenue: { $sum: "$totalPrice" } } },
     ]);
 
     const totalRevenue = revenue[0]?.totalRevenue || 0;
@@ -227,8 +219,7 @@ exports.getAllOrder = async function (req, res) {
   }
 };
 
-// view AllOrders
-
+// View All Orders
 exports.viewOrder = async function (req, res) {
   try {
     const { orderId } = req.params;
@@ -295,10 +286,7 @@ exports.changeOrderStatus = async function (req, res) {
   }
 };
 
-/////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////
-
-//fetch alll users
+// ----------------------- USER SECTION ----------------------- //
 
 exports.getAllUsers = async function (req, res) {
   try {
@@ -307,46 +295,28 @@ exports.getAllUsers = async function (req, res) {
     const limitNumber = parseInt(limit);
     const skip = (pageNumber - 1) * limitNumber;
     let filter = { role: "user" };
-    if (isBlocked) {
-      filter.isBlocked = isBlocked === "true";
-    }
+    if (isBlocked) filter.isBlocked = isBlocked === "true";
 
     const allUsers = await User.find(filter).skip(skip).limit(limitNumber);
-    res.status(200).json({
-      status: "success",
-      data: allUsers,
-    });
+    res.status(200).json({ status: "success", data: allUsers });
   } catch (err) {
-    res.status(400).json({
-      status: "failed",
-      message: err.message,
-    });
+    res.status(400).json({ status: "failed", message: err.message });
   }
 };
 
-//block user
 exports.blockUser = async function (req, res) {
   try {
     const loggedInUser = req.user;
-    if (!loggedInUser) {
-      return res.status(401).json({
-        status: "failed",
-        message: "You are not logged in. Please login first.",
-      });
-    }
-
-    if (loggedInUser.role !== "admin") {
-      return res.status(403).json({
-        status: "failed",
-        message: "You are not authorized to perform this action.",
-      });
-    }
+    if (!loggedInUser)
+      return res.status(401).json({ status: "failed", message: "Login required" });
+    if (loggedInUser.role !== "admin")
+      return res.status(403).json({ status: "failed", message: "Not authorized" });
 
     const { id } = req.params;
-    if (!id) throw new Error("No user ID provided.");
+    if (!id) throw new Error("No user ID provided");
 
     const user = await User.findById(id);
-    if (!user) throw new Error("No user found with that ID.");
+    if (!user) throw new Error("No user found with that ID");
 
     user.isBlocked = !user.isBlocked;
     await user.save();
@@ -359,53 +329,27 @@ exports.blockUser = async function (req, res) {
       data: safeUser,
     });
   } catch (err) {
-    res.status(400).json({
-      status: "failed",
-      message: err.message,
-    });
+    res.status(400).json({ status: "failed", message: err.message });
   }
 };
 
-
-//  Delete a user by admin
 exports.deleteUser = async function (req, res) {
   try {
     const loggedInUser = req.user;
-
-    if (!loggedInUser) {
-      return res.status(401).json({
-        status: "failed",
-        message: "You are not logged in. Please login first.",
-      });
-    }
-
-    if (loggedInUser.role !== "admin") {
-      return res.status(403).json({
-        status: "failed",
-        message: "You are not authorized to perform this action.",
-      });
-    }
+    if (!loggedInUser)
+      return res.status(401).json({ status: "failed", message: "Login required" });
+    if (loggedInUser.role !== "admin")
+      return res.status(403).json({ status: "failed", message: "Not authorized" });
 
     const { id } = req.params;
-    if (!id) throw new Error("No user ID provided.");
+    if (!id) throw new Error("No user ID provided");
 
     const deletedUser = await User.findByIdAndDelete(id);
+    if (!deletedUser)
+      return res.status(404).json({ status: "failed", message: "User not found" });
 
-    if (!deletedUser) {
-      return res.status(404).json({
-        status: "failed",
-        message: "No user found with that ID.",
-      });
-    }
-
-    res.status(200).json({
-      status: "success",
-      message: "User deleted successfully",
-    });
+    res.status(200).json({ status: "success", message: "User deleted successfully" });
   } catch (err) {
-    res.status(400).json({
-      status: "failed",
-      message: err.message,
-    });
+    res.status(400).json({ status: "failed", message: err.message });
   }
 };
