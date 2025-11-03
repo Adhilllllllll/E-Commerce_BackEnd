@@ -64,6 +64,7 @@ exports.addProduct = async function (req, res) {
       brand,
       rating,
       count,
+      isActive: isActive !== undefined ? isActive:true,
       image, // single string
     });
 
@@ -83,7 +84,7 @@ exports.addProduct = async function (req, res) {
 exports.editProduct = async function (req, res) {
   try {
     const { productId } = req.params;
-    const { name, description, price, category, brand, count, rating, image } = req.body;
+    const { name, description, price, category, brand, count, rating, image ,isActive} = req.body;
 
     if (!productId) throw new Error("No product ID provided.");
 
@@ -95,7 +96,9 @@ exports.editProduct = async function (req, res) {
     if (brand !== undefined) updateData.brand = brand;
     if (count !== undefined) updateData.count = count;
     if (rating !== undefined) updateData.rating = rating;
+    if(rating !==undefined) updateData.isActive=isActive;
 
+    
     // Image update
     if (req.file) {
       updateData.image = req.file.path; // new uploaded file
