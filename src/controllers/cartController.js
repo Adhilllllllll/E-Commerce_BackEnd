@@ -187,15 +187,7 @@ exports.updateCartItem = async function (req, res) {
       });
     }
 
-    // // Update the quantity
-    // cartItem.quantity = Number(quantity);
-
-    // // Ensure quantity is at least 1
-    // if (cartItem.quantity < 1) cartItem.quantity = 1;
-
-    // await cartItem.save();
-
-   // Convert to number and validate
+ 
 const qty = Number(quantity);
 if (!qty || qty < 1) {
   return res.status(400).json({

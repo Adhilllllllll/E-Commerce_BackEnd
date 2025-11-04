@@ -37,13 +37,14 @@ exports.login = async (req, res) => {
     const token = signToken(user._id);
 
     // Set cookie
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: "/",
-    });
+    const isProd = process.env.NODE_ENV === "development";
+
+   res.cookie("token", token, {
+  httpOnly: true,
+  secure: isProd,                   // true in prod (HTTPS), false in local dev
+  sameSite: isProd ? "none" : "lax", // "none" in prod, "lax" for localhost
+  path: "/",                        // ensure cookie is valid for all routes
+})
 
     // Normalize role
     const userRole = user.role === "user" ? "customer" : user.role;
@@ -63,13 +64,16 @@ exports.login = async (req, res) => {
 // 🔹 Logout
 exports.logout = async (req, res) => {
   try {
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      path: "/",
-      expires: new Date(0),
-    });
+  const isProd = process.env.NODE_ENV === "development";
+
+res.clearCookie("token", {
+  httpOnly: true,
+  secure: isProd,
+  sameSite: isProd ? "none" : "lax",
+  path: "/",
+  expires: new Date(0),
+});
+
 
     res.status(200).json({ status: "success", message: "Logged out successfully" });
   } catch (err) {

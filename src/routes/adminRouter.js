@@ -90,7 +90,7 @@ router.use(authenticateUser, restrictTo("admin"));
 // -------------------- PRODUCT ROUTES -------------------- //
 router.post("/addProduct", upload.single("image"), adminController.addProduct);
 router.get("/viewProduct/:productId", adminController.viewProduct);
-router.put("/editProduct/:productId", upload.array("image",5), adminController.editProduct);
+router.put("/editProduct/:productId", upload.single("image"), adminController.editProduct);
 router.delete("/deleteProduct/:productId", adminController.deleteProduct);
 router.get("/allProducts", adminController.getAllProducts);
 

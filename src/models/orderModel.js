@@ -28,7 +28,7 @@ const orderSchema = new mongoose.Schema(
     },
 
     address: {
-      type: String,
+      type:mongoose.Schema.Types.Mixed,
       required: [true, "Shipping address is required"],
     },
 
@@ -38,9 +38,14 @@ const orderSchema = new mongoose.Schema(
       default: "pending",
     },
 
+    paymentMethod:{
+        type:String,
+        enum:["cod","upi","razorpay"],
+    },
+
     paymentStatus: {
       type: String,
-      enum: ["unpaid", "paid"],
+      enum: ["unpaid", "paid","failed"],
       default: "unpaid",
     },
   },
