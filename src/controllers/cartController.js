@@ -237,7 +237,8 @@ exports.deleteFromCart = async function (req, res) {
     if (!removeCart) {
       return res.status(404).json({
         status: "failed",
-        message: "cart item not fond ",
+        message:"Item already removed or not found",
+        data:[],
       });
     }
 

@@ -6,12 +6,13 @@ const Product = require("../models/productModel");
 // ****************************
 // Create Order
 // ****************************
+// ****************************
+// Create a new order after validating user, cart, and stock
 exports.createOrder = async (req, res) => {
   try {
     const loggedInUser = req.user;
-    
 
-    // Check login
+    // 🧠 Safety check: user must be logged in
     if (!loggedInUser) {
       return res.status(401).json({
         status: "failed",
@@ -21,44 +22,44 @@ exports.createOrder = async (req, res) => {
 
     const { address, paymentMethod } = req.body;
 
-    // Validate shipping address
-    if (!address) {
+    // 🏠 Validate shipping address
+    if (!address || address.trim().length === 0) {
       return res.status(400).json({
         status: "failed",
         message: "Shipping address is required",
       });
     }
 
-    // Fetch cart items
+    // 🛒 Fetch all cart items for this user
     const cartItems = await Cart.find({ userId: loggedInUser._id }).populate("productId");
 
-    if (cartItems.length === 0) {
+    if (!cartItems || cartItems.length === 0) {
       return res.status(400).json({
         status: "failed",
-        message: "Cart is empty",
+        message: "Your cart is empty. Please add products to proceed.",
       });
     }
 
-    // Map products, check stock, and calculate total price safely
+    // 🧮 Build valid product list & compute total safely
     const products = [];
     let totalPrice = 0;
 
     for (const item of cartItems) {
-      // 🧹 Clean up invalid cart items instead of failing
+      // Skip invalid or missing products
       if (!item.productId || !item.productId._id) {
-        console.warn("⚠️ Found invalid cart item, removing:", item._id);
+        console.warn("⚠️ Invalid cart item found:", item._id);
         await Cart.deleteOne({ _id: item._id });
         continue;
       }
 
       const product = await Product.findById(item.productId._id);
       if (!product) {
-        console.warn("⚠️ Product not found in DB, removing from cart:", item.productId._id);
+        console.warn("⚠️ Product not found in DB:", item.productId._id);
         await Cart.deleteOne({ _id: item._id });
         continue;
       }
 
-      // Check stock
+      // 🧾 Check stock
       if (product.count < item.quantity) {
         return res.status(400).json({
           status: "failed",
@@ -66,57 +67,61 @@ exports.createOrder = async (req, res) => {
         });
       }
 
-      // Deduct stock safely
+      // Update stock
       product.count -= item.quantity;
       await product.save();
 
-      // Add valid product to order
+      // Add to order summary
       products.push({
         productId: product._id,
         quantity: item.quantity,
+        price: product.price,
       });
 
       totalPrice += product.price * item.quantity;
     }
 
-    // 🧩 If all products were invalid, stop
+    // 🧩 Stop if all products were invalid
     if (products.length === 0) {
       return res.status(400).json({
         status: "failed",
-        message: "No valid products found in your cart. Please refresh your cart and try again.",
+        message: "No valid products found in your cart. Please refresh and try again.",
       });
     }
 
-    // Create new order
+    // 💳 Create the order
     const newOrder = await Order.create({
       userId: loggedInUser._id,
       products,
       totalPrice,
       address,
-      status: "pending",
       paymentMethod: paymentMethod || "cod",
+      status: paymentMethod === "cod" ? "pending" : "paid",
       paymentStatus: paymentMethod === "cod" ? "unpaid" : "paid",
+      createdAt: new Date(),
     });
 
-    // Clear user's cart after placing order
+    // 🧹 Clear user's cart after successful order
     await Cart.deleteMany({ userId: loggedInUser._id });
 
+    // ✅ Respond success
     res.status(201).json({
       status: "success",
       message: "Order placed successfully!",
       data: newOrder,
     });
+
   } catch (err) {
     console.error("❌ Order creation error:", err);
-    res.status(400).json({
+    res.status(500).json({
       status: "failed",
-      message: err.message,
+      message: err.message || "An error occurred while creating the order.",
     });
   }
 };
 
 // ****************************
-// Get All Orders
+// Get All Orders (user or admin)
 // ****************************
 exports.getAllOrders = async (req, res) => {
   try {
@@ -129,16 +134,28 @@ exports.getAllOrders = async (req, res) => {
       });
     }
 
-    const allOrders = await Order.find({ userId: loggedInUser._id })
-      .populate("products.productId", "name price image count");
+    let orders;
+
+    
+    if (loggedInUser.role === "admin") {
+      orders = await Order.find()
+        .populate("products.productId", "name price image count")
+        .populate("userId", "name email")
+        .sort({ createdAt: -1 }); // newest first
+    } else {
+      
+      orders = await Order.find({ userId: loggedInUser._id })
+        .populate("products.productId", "name price image count")
+        .sort({ createdAt: -1 });
+    }
 
     res.status(200).json({
       status: "success",
-      allOrders,
+      allOrders: orders,
     });
   } catch (err) {
     console.error("❌ Fetch orders error:", err);
-    res.status(400).json({
+    res.status(500).json({
       status: "failed",
       message: err.message,
     });

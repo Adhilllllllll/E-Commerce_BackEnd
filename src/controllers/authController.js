@@ -37,12 +37,13 @@ exports.login = async (req, res) => {
     const token = signToken(user._id);
 
     // Set cookie
-    const isProd = process.env.NODE_ENV === "development";
+    const isProd = process.env.NODE_ENV === "production";
 
    res.cookie("token", token, {
   httpOnly: true,
-  secure: isProd,                   // true in prod (HTTPS), false in local dev
-  sameSite: isProd ? "none" : "lax", // "none" in prod, "lax" for localhost
+  secure: isProd ?true :false,                   // true in prod (HTTPS), false in local dev
+  sameSite:  "none",
+  maxAge: 24 * 60 * 60 * 1000, // "none" in prod, "lax" for localhost
   path: "/",                        // ensure cookie is valid for all routes
 })
 
