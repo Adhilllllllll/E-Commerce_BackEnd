@@ -49,12 +49,15 @@ exports.getAllProducts = async function (req, res) {
 exports.addProduct = async function (req, res) {
   try {
     const { name, description, price, category, brand, rating, count } = req.body;
+ 
+    const isActive =req.body.isActive === "true" || req.body.isActive === true;
 
-    // Single image upload handling
-    let image = "";
+    
+   let image = "";
     if (req.file) {
       image = req.file.path;
     }
+
 
     const newProduct = await Product.create({
       name,
@@ -64,9 +67,10 @@ exports.addProduct = async function (req, res) {
       brand,
       rating,
       count,
-      isActive: isActive !== undefined ? isActive:true,
+       isActive,
       image, // single string
     });
+
 
     res.status(201).json({
       status: "success",
