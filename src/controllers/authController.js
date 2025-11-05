@@ -42,7 +42,7 @@ exports.login = async (req, res) => {
    res.cookie("token", token, {
   httpOnly: true,
   secure: isProd ?true :false,                   // true in prod (HTTPS), false in local dev
-  sameSite:  "none",
+  sameSite:"lax",
   maxAge: 24 * 60 * 60 * 1000, // "none" in prod, "lax" for localhost
   path: "/",                        // ensure cookie is valid for all routes
 })

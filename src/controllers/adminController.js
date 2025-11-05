@@ -195,7 +195,8 @@ exports.getAllOrder = async function (req, res) {
       .skip(skip)
       .limit(limit)
       .populate("products.productId", "name price image")
-      .populate("userId", "name email");
+      .populate("userId", "name email")
+       .sort({ createdAt: -1 });
 
     const totalOrders = await Order.countDocuments();
 
@@ -207,11 +208,12 @@ exports.getAllOrder = async function (req, res) {
 
     res.status(200).json({
       status: "success",
+      allOrders:allOrders,
       totalOrders,
       totalRevenue,
       currentPage: page,
       totalPages: Math.ceil(totalOrders / limit),
-      data: allOrders,
+      // data: allOrders,
     });
   } catch (err) {
     res.status(400).json({
@@ -253,21 +255,49 @@ exports.viewOrder = async function (req, res) {
 
 exports.changeOrderStatus = async function (req, res) {
   try {
+    // const { orderId } = req.params;
+    // const { status } = req.body;
+
+    // if (!orderId || !status) {
+    //   return res.status(400).json({
+    //     status: "failed",
+    //     message: "Order ID and status are required",
+    //   });
+    // }
+
+    // const order = await Order.findByIdAndUpdate(
+    //   orderId,
+    //   { status },
+    //   { new: true, runValidators: true }
+    // );
+
     const { orderId } = req.params;
-    const { status } = req.body;
+let { status } = req.body;
 
-    if (!orderId || !status) {
-      return res.status(400).json({
-        status: "failed",
-        message: "Order ID and status are required",
-      });
-    }
+if (!orderId || !status) {
+  return res.status(400).json({
+    status: "failed",
+    message: "Order ID and status are required",
+  });
+}
 
-    const order = await Order.findByIdAndUpdate(
-      orderId,
-      { status },
-      { new: true, runValidators: true }
-    );
+// Normalize status to lowercase (optional but good practice)
+status = status.toLowerCase();
+
+const validStatuses = ["pending", "processing", "shipped", "delivered", "cancelled"];
+if (!validStatuses.includes(status)) {
+  return res.status(400).json({
+    status: "failed",
+    message: "Invalid order status value",
+  });
+}
+
+const order = await Order.findByIdAndUpdate(
+  orderId,
+  { status },
+  { new: true, runValidators: true }
+);
+
 
     if (!order) {
       return res.status(404).json({
@@ -356,3 +386,8 @@ exports.deleteUser = async function (req, res) {
     res.status(400).json({ status: "failed", message: err.message });
   }
 };
+
+
+
+/////////////
+ 

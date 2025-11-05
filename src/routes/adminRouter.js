@@ -98,6 +98,15 @@ router.get("/allProducts", adminController.getAllProducts);
 router.get("/allOrders", adminController.getAllOrder); // consider renaming to getAllOrders
 router.get("/viewOrder/:orderId", adminController.viewOrder);
 router.put("/changeOrderStatus/:orderId", adminController.changeOrderStatus);
+ router.get("/testPopulate", async (req, res) => {
+  const Order = require("../models/orderModel");
+  const result = await Order.findOne().populate("userId", "name email");
+  res.json(result);
+});
+
+
 
 module.exports = router;
+
+
 

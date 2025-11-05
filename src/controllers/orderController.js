@@ -263,7 +263,7 @@ exports.payOrder = async (req, res) => {
       data: order,
     });
   } catch (err) {
-    console.error("❌ Pay order error:", err);
+    console.error("Pay order error:", err);
     res.status(400).json({
       status: "failed",
       message: err.message,

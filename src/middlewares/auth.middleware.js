@@ -8,10 +8,12 @@ async function authenticateUser(req, res, next) {
     //   Get token from cookie or Authorization header
     let token = req.cookies?.token || req.headers.authorization?.split(" ")[1];
 
+console.log(" Incoming cookies:", req.cookies);
+console.log(" Token:", token);
 
 
 //     console.log("🔍 Cookies:", req.cookies);
-// console.log("🔍 Token found:", token ? "✅ Yes" : "❌ No");
+// console.log("🔍 Token found:", token ? "✅ Yes" : "No");
 
     if (!token) {
       return res.status(401).json({ status: "failed", message: "Please login first" });
@@ -32,7 +34,7 @@ async function authenticateUser(req, res, next) {
     }
 
     // Normalize role
-    if (user.role === "user") user.role = "customer";
+    if (user.role === "user") user.role = "user";
 
     // Attach user to request
     req.user = user;
