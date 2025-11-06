@@ -11,10 +11,12 @@ exports.getCartItems = async function (req, res) {
       });
     }
 
-    const carts = await Cart.find({ userId:  req.user.id }).populate("productId");
+    const carts = await Cart.find({ userId: req.user.id }).populate(
+      "productId"
+    );
 
     // remove deleted products
-const filteredCarts = carts.filter(item => item.productId !== null);
+    const filteredCarts = carts.filter((item) => item.productId !== null);
 
     res.status(200).json({
       status: "success",
@@ -41,15 +43,14 @@ exports.addToCart = async function (req, res) {
         message: "logIn in first",
       });
     }
-     
-   const productExists = await Product.findById(productId);
+
+    const productExists = await Product.findById(productId);
     if (!productExists) {
       return res.status(404).json({
         status: "failed",
         message: "Product not found",
       });
     }
-
 
     //checking the product if existing or not
     const isAlreadyInCart = await Cart.findOne({
@@ -82,73 +83,6 @@ exports.addToCart = async function (req, res) {
   }
 };
 
-// //  update cart
-
-// exports.updateCartItem = async function (req, res) {
-//   try {
-//     const { productId } = req.params;
-//     const loggedInUser = req.user;
-
-//     const { quantity } = req.body;
-
-//     if (!loggedInUser) {
-//       return res.status(401).json({
-//         status: "failed",
-//         message: "Please login first",
-//       });
-//     };
-
-
-//     const cartItem = await Cart.findOne({
-//       userId: loggedInUser.id,
-//       productId,
-//     }).populate("productId");
-
-//     if (!cartItem || !cartItem.productId) {
-//   return res.status(404).json({
-//     status: "failed",
-//     message: "Cart item not found",
-//   });
-// }
-
-
-  
-
-    
-//     if (!cartItem) {
-//       return res.status(200).json({
-//         status: "failed",
-//         message: "invalid productId",
-//       });
-//     }
-
-//     cartItem.quantity = Number(quantity);
-
-//     // Prevent going below 1
-//     if (cartItem.quantity < 1) {
-//       cartItem.quantity = 1;
-//     }
-
-//     await cartItem.save();
-//     await cartItem.populate("productId");
-
-//     res.status(201).json({
-//       status: "success",
-//       message: "Cart quantity upated succesfully",
-//       data: cartItem,
-//     });
-//   } catch (err) {
-//     res.status(400).json({
-//       status: "failed",
-//       message: err.message,
-//     });
-//   }
-// };
-
-// Remove From The Cart
-
-
-
 // Update Cart Item
 exports.updateCartItem = async function (req, res) {
   try {
@@ -164,8 +98,7 @@ exports.updateCartItem = async function (req, res) {
       });
     }
 
-
-     // Add quantity validation here
+    // Add quantity validation here
     if (!Number.isInteger(quantity) || quantity < 1) {
       return res.status(400).json({
         status: "failed",
@@ -187,19 +120,16 @@ exports.updateCartItem = async function (req, res) {
       });
     }
 
- 
-const qty = Number(quantity);
-if (!qty || qty < 1) {
-  return res.status(400).json({
-    status: "failed",
-    message: "Invalid quantity",
-  });
-}
+    const qty = Number(quantity);
+    if (!qty || qty < 1) {
+      return res.status(400).json({
+        status: "failed",
+        message: "Invalid quantity",
+      });
+    }
 
-// Assign the validated quantity
-cartItem.quantity = qty;
-
-
+    // Assign the validated quantity
+    cartItem.quantity = qty;
 
     res.status(200).json({
       status: "success",
@@ -213,7 +143,6 @@ cartItem.quantity = qty;
     });
   }
 };
-
 
 ////////////
 
@@ -237,18 +166,19 @@ exports.deleteFromCart = async function (req, res) {
     if (!removeCart) {
       return res.status(404).json({
         status: "failed",
-        message:"Item already removed or not found",
-        data:[],
+        message: "Item already removed or not found",
+        data: [],
       });
     }
 
-    const data = await Cart.find({ userId: loggedInUser.id })
-     .populate("productId");
-     const filterData =data.filter(item => item.productId !==null)
+    const data = await Cart.find({ userId: loggedInUser.id }).populate(
+      "productId"
+    );
+    const filterData = data.filter((item) => item.productId !== null);
 
     res.status(200).json({
       status: "success",
-      data :filterData,
+      data: filterData,
     });
   } catch (err) {
     res.status(400).json({

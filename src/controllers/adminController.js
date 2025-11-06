@@ -100,7 +100,7 @@ exports.editProduct = async function (req, res) {
     if (brand !== undefined) updateData.brand = brand;
     if (count !== undefined) updateData.count = count;
     if (rating !== undefined) updateData.rating = rating;
-    if(rating !==undefined) updateData.isActive=isActive;
+    if(isActive !==undefined) updateData.isActive=isActive;
 
     
     // Image update

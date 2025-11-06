@@ -11,9 +11,7 @@ async function authenticateUser(req, res, next) {
 console.log(" Incoming cookies:", req.cookies);
 console.log(" Token:", token);
 
-
-//     console.log("🔍 Cookies:", req.cookies);
-// console.log("🔍 Token found:", token ? "✅ Yes" : "No");
+ 
 
     if (!token) {
       return res.status(401).json({ status: "failed", message: "Please login first" });
